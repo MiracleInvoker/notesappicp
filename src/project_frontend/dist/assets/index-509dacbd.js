@@ -1,0 +1,21 @@
+(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))e(s);new MutationObserver(s=>{for(const i of s)if(i.type==="childList")for(const r of i.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&e(r)}).observe(document,{childList:!0,subtree:!0});function o(s){const i={};return s.integrity&&(i.integrity=s.integrity),s.referrerPolicy&&(i.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?i.credentials="include":s.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function e(s){if(s.ep)return;s.ep=!0;const i=o(s);fetch(s.href,i)}})();class _{constructor(t,{onNoteSelect:o,onNoteAdd:e,onNoteEdit:s,onNoteDelete:i}={}){this.root=t,this.onNoteSelect=o,this.onNoteAdd=e,this.onNoteEdit=s,this.onNoteDelete=i,this.root.innerHTML=`
+          <div class="notes__sidebar">
+              <button class="notes__add" type="button">Add Note</button>
+              <div class="notes__list"></div>
+          </div>
+          <div class="notes__preview">
+              <input class="notes__title" type="text" placeholder="Title">
+              <textarea class="notes__body">How was your day..</textarea>
+          </div>
+      `;const r=this.root.querySelector(".notes__add"),d=this.root.querySelector(".notes__title"),c=this.root.querySelector(".notes__body");r.addEventListener("click",()=>{this.onNoteAdd()}),[d,c].forEach(a=>{a.addEventListener("blur",()=>{const u=d.value.trim(),h=c.value.trim();this.onNoteEdit(u,h)})}),this.updateNotePreviewVisibility(!1)}_createListItemHTML(t,o,e,s){return`
+          <div class="notes__list-item" data-note-id="${t}">
+              <div class="notes__small-title">${o}</div>
+              <div class="notes__small-body">
+                  ${e.substring(0,60)}
+                  ${e.length>60?"...":""}
+              </div>
+              <div class="notes__small-updated">
+                  ${s.toLocaleString(void 0,{dateStyle:"full",timeStyle:"short"})}
+              </div>
+          </div>
+      `}updateNoteList(t){const o=this.root.querySelector(".notes__list");o.innerHTML="";for(const e of t){const s=this._createListItemHTML(e.id,e.title,e.body,new Date(e.updated));o.insertAdjacentHTML("beforeend",s)}o.querySelectorAll(".notes__list-item").forEach(e=>{e.addEventListener("click",()=>{this.onNoteSelect(e.dataset.noteId)}),e.addEventListener("dblclick",()=>{confirm("Are you sure you want to delete this note?")&&this.onNoteDelete(e.dataset.noteId)})})}updateActiveNote(t){this.root.querySelector(".notes__title").value=t.title,this.root.querySelector(".notes__body").value=t.body,this.root.querySelectorAll(".notes__list-item").forEach(o=>{o.classList.remove("notes__list-item--selected")}),this.root.querySelector(`.notes__list-item[data-note-id="${t.id}"]`).classList.add("notes__list-item--selected")}updateNotePreviewVisibility(t){this.root.querySelector(".notes__preview").style.visibility=t?"visible":"hidden"}}class n{static getAllNotes(){return JSON.parse(localStorage.getItem("notesapp-notes")||"[]").sort((o,e)=>new Date(o.updated)>new Date(e.updated)?-1:1)}static saveNote(t){const o=n.getAllNotes(),e=o.find(s=>s.id==t.id);e?(e.title=t.title,e.body=t.body,e.updated=new Date().toISOString()):(t.id=Math.floor(Math.random()*1e6),t.updated=new Date().toISOString(),o.push(t)),localStorage.setItem("notesapp-notes",JSON.stringify(o))}static deleteNote(t){const e=n.getAllNotes().filter(s=>s.id!=t);localStorage.setItem("notesapp-notes",JSON.stringify(e))}}class N{constructor(t){this.notes=[],this.activeNote=null,this.view=new _(t,this._handlers()),this._refreshNotes()}_refreshNotes(){const t=n.getAllNotes();this._setNotes(t),t.length>0&&this._setActiveNote(t[0])}_setNotes(t){this.notes=t,this.view.updateNoteList(t),this.view.updateNotePreviewVisibility(t.length>0)}_setActiveNote(t){this.activeNote=t,this.view.updateActiveNote(t)}_handlers(){return{onNoteSelect:t=>{const o=this.notes.find(e=>e.id==t);this._setActiveNote(o)},onNoteAdd:()=>{const t={title:"New Note",body:"Take note..."};n.saveNote(t),this._refreshNotes()},onNoteEdit:(t,o)=>{n.saveNote({id:this.activeNote.id,title:t,body:o}),this._refreshNotes()},onNoteDelete:t=>{n.deleteNote(t),this._refreshNotes()}}}}const p=document.getElementById("app");new N(p);
